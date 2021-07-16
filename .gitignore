@@ -1,0 +1,7 @@
+.idea/
+target/
+*.txt
+*.iml
+*.xml
+*.csv
+*.gson
