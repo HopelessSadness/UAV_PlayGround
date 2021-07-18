@@ -2,9 +2,17 @@ package com.UAV_PlayGround;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 public class AssemblyManager implements AssemblyManagementProcessor {
+    private static final Logger logger = Logger.getLogger(AssemblyManager.class.getName());
+    private static final String LOG_FILE_NAME_PREFIX = "AssemblyManager ";
     private static final String CSV_SEPARATOR = ",";
     private static final String CSV_PREFIX_FULL_ENTITY_LIST_SORTED_BY_ID = "fullEntityListSortedById_";
 
@@ -12,6 +20,16 @@ public class AssemblyManager implements AssemblyManagementProcessor {
 
     public void generateFullEntityListSortedByIdInCSV(Object[] inputData, String UAVNumber)
             throws AssemblyManagementException {
+
+        String defaultPath;
+        try {
+            defaultPath = (new File(".")).getCanonicalPath();
+            initLogFile(defaultPath, LOG_FILE_NAME_PREFIX);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new AssemblyManagementException(".generateFullEntityListSortedByIdInCSV() falls with '" +
+                    e.getMessage() + "'!", logger);
+        }
 
         validateInputEntities(inputData);
 
@@ -38,7 +56,7 @@ public class AssemblyManager implements AssemblyManagementProcessor {
         } catch (IOException e) {
             e.printStackTrace();
             throw new AssemblyManagementException(".generateFullEntityListSortedByIdInCSV() falls with '" +
-                    e.getMessage() + "'!");
+                    e.getMessage() + "'!", logger);
         }
     }
 
@@ -77,6 +95,26 @@ public class AssemblyManager implements AssemblyManagementProcessor {
 
     }
 
+    private static void initLogFile(String path, String logFileNamePrefix) throws IOException {
+        File file = new File(Paths.get(path).resolve("log").toString());
+        if (file.mkdir()) {
+            System.out.println(String.format("%s: logFile directory has been created..",
+                    AssemblyManager.class.getName()));
+        } else {
+            System.out.println(String.format("%s: logFile directory already exist..",
+                    AssemblyManager.class.getName()));
+        }
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("k-m-s(d.MM.yy)");
+        String currentDate = dateFormat.format(new Date());
+
+        FileHandler fh = new FileHandler(Paths.get(path).resolve("log/" +
+                logFileNamePrefix + currentDate + ".txt").toString());
+        fh.setFormatter(new SimpleFormatter());
+        logger.addHandler(fh);
+        logger.setLevel(Level.ALL);
+    }
+
     private void validateInputEntities(Object[] inputData)
             throws AssemblyManagementException {
         for (Object object : inputData) {
@@ -86,7 +124,7 @@ public class AssemblyManager implements AssemblyManagementProcessor {
 
             String failedType = object.getClass().toString();
             throw new AssemblyManagementException(
-                    "Input data is not valid!\n//falls with type == " + failedType);
+                    "Input data is not valid!\n//falls with type == " + failedType, logger);
         }
     }
 
